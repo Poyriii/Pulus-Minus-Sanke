@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Snake Game</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#e0f7fa;display:flex;justify-content:center;align-items:center;height:100vh;}
+canvas{background:#a7ffeb;border:3px solid #006064;border-radius:10px;}
+#score{position:absolute;top:10px;left:10px;font-size:20px;color:#004d40;font-weight:bold;}
+#menu,#gameover,#market{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#004d40;color:white;padding:20px;border-radius:15px;text-align:center;display:none;}
+button{margin:5px;padding:10px 20px;border:none;border-radius:10px;background:#00695c;color:white;font-size:16px;cursor:pointer;}
+button:hover{background:#004d40;}
+#colorOptions button{width:50px;height:50px;margin:5px;}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<div id="score">Puan: 0</div>
+
+<div id="menu">
+<h2>Math Snake</h2>
+<button id="playBtn">Oyna</button>
+<button id="marketBtn">Market</button>
+<button id="exitBtn">Çıkış</button>
+</div>
+
+<div id="gameover">
+<h2>Oyun Bitti!</h2>
+<p id="finalScore"></p>
+<button id="retryBtn">Tekrar Oyna</button>
+<button id="marketBtn2">Market</button>
+<button id="exitBtn2">Çıkış</button>
+</div>
+
+<div id="market">
+<h2>Market</h2>
+<p>Puanın: <span id="marketPoints">0</span></p>
+<div id="colorOptions"></div>
+<button id="marketBack">Geri</button>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const grid=20;
+let snake=[{x:200,y:200}], dx=grid, dy=0, numbers=[], score=0, interval=null;
+let colors=["#004d40","#00695c","#00796b","#00897b"], snakeColor=colors[0], marketPoints=0;
+
+const menu=document.getElementById("menu");
+const gameover=document.getElementById("gameover");
+const market=document.getElementById("market");
+const marketPointsEl=document.getElementById("marketPoints");
+const colorOptions=document.getElementById("colorOptions");
+
+document.getElementById("playBtn").onclick=startGame;
+document.getElementById("retryBtn").onclick=startGame;
+document.getElementById("exitBtn").onclick=()=>window.close();
+document.getElementById("exitBtn2").onclick=()=>window.close();
+document.getElementById("marketBtn").onclick=showMarket;
+document.getElementById("marketBtn2").onclick=showMarket;
+document.getElementById("marketBack").onclick=()=>{market.style.display="none";menu.style.display="block";};
+
+document.addEventListener("keydown",e=>{
+if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-grid;}
+else if(e.key==="ArrowDown"&&dy===0){dx=0;dy=grid;}
+else if(e.key==="ArrowLeft"&&dx===0){dx=-grid;dy=0;}
+else if(e.key==="ArrowRight"&&dx===0){dx=grid;dy=0;}
+});
+
+menu.style.display="block";
+
+function startGame(){
+    menu.style.display="none"; gameover.style.display="none";
+    snake=[{x:200,y:200}]; dx=grid; dy=0; score=0; numbers=[];
+    for(let i=0;i<2;i++) spawnNumber();
+    document.getElementById("score").innerText="Puan: 0";
+    clearInterval(interval);
+    interval=setInterval(gameLoop,150);
+}
+
+function gameLoop(){
+    const head={x:(snake[0].x+dx+canvas.width)%canvas.width, y:(snake[0].y+dy+canvas.height)%canvas.height};
+    for(let s of snake){if(s.x===head.x && s.y===head.y){endGame();return;}}
+    snake.unshift(head);
+    let ate=false;
+    for(let i=0;i<numbers.length;i++){
+        if(head.x===numbers[i].x && head.y===numbers[i].y){
+            score+=numbers[i].value;
+            if(numbers[i].value>0) marketPoints+=numbers[i].value;
+            document.getElementById("score").innerText="Puan: "+score;
+            numbers.splice(i,1);
+            ate=true;
+            if(score<-1){endGame();return;}
+            spawnNumber();
+            break;
+        }
+    }
+    if(!ate) snake.pop();
+    drawGame();
+}
+
+function spawnNumber(){
+    let x=Math.floor(Math.random()*20)*grid;
+    let y=Math.floor(Math.random()*20)*grid;
+    for(let s of snake){if(s.x===x&&s.y===y){spawnNumber();return;}}
+    let val=Math.random()<0.6?randInt(1,5):-randInt(1,5);
+    numbers.push({x,y,value:val});
+}
+
+function drawGame(){
+    ctx.fillStyle="#a7ffeb"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.font="16px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    for(let n of numbers){ctx.fillStyle=n.value>0?"#ffeb3b":"#f44336"; ctx.fillText(n.value,n.x+grid/2,n.y+grid/2);}
+    for(let s of snake){ctx.fillStyle=snakeColor; ctx.fillRect(s.x,s.y,grid,grid);}
+}
+
+function endGame(){clearInterval(interval);document.getElementById("finalScore").innerText="Puanın: "+score;gameover.style.display="block";}
+
+function showMarket(){
+    market.style.display="block"; menu.style.display="none";
+    marketPointsEl.innerText=marketPoints;
+    colorOptions.innerHTML="";
+    colors.forEach(c=>{
+        let btn=document.createElement("button");
+        btn.style.background=c;
+        btn.onclick=()=>{snakeColor=c; if(marketPoints>=10) marketPoints-=10; marketPointsEl.innerText=marketPoints;};
+        colorOptions.appendChild(btn);
+    });
+}
+
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+</script>
+</body>
+</html>
