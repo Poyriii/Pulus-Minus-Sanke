@@ -1,2 +1,2 @@
 # Pulus-Minus-Sanke
-A snake game github Numbers 
+A snake game with numbers 😭
